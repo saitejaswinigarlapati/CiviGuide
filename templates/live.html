@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safe Journey</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live.css') }}">
+</head>
+<body>
+
+<!-- Hamburger -->
+<div class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+
+<!-- Sidebar -->
+<div id="mySidebar" class="sidebar">
+  <h2>Features</h2>
+  <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+  <a href="{{ url_for('live') }}"><i class="fa-solid fa-triangle-exclamation"></i> Disaster Zone Detection</a>
+  <a href="{{ url_for('alternate') }}"><i class="fa-solid fa-route"></i> Alternate Route Suggestion</a>
+  <a href="{{ url_for('border_alert') }}"><i class="fa-solid fa-map"></i> National Border Alert</a>
+  <a href="{{ url_for('emergency') }}"><i class="fa-solid fa-ambulance"></i> Emergency Services Locator</a>
+  <a href="{{ url_for('safety_tips') }}"><i class="fa-solid fa-shield-halved"></i> Safety Tips & Guides</a>
+
+  <hr>
+  <h3>Emergency Numbers</h3>
+  <ul>
+    <li>🚑 Ambulance: <span class="badge green" onclick="window.location.href='tel:108'">108 / 102</span></li>
+    <li>👮 Police: <span class="badge blue" onclick="window.location.href='tel:100'">100</span></li>
+    <li>🔥 Fire: <span class="badge red" onclick="window.location.href='tel:101'">101</span></li>
+    <li>🌐 NDRF: <span class="badge yellow" onclick="window.location.href='tel:1078'">1078</span></li>
+  </ul>
+
+  <hr>
+  <h3>Quote of the Day</h3>
+  <div class="quote-card">"Preparedness today saves lives tomorrow."</div>
+</div>
+
+
+<!-- Animated Heading -->
+<h2 class="animated-heading">🛡️ Your Safety is Our First Priority</h2>
+
+<!-- Controls -->
+<div class="controls">
+  <input type="text" id="source" placeholder="Enter Source">
+  <button onclick="swapLocations()"><i class="fas fa-exchange-alt"></i></button>
+  <input type="text" id="destination" placeholder="Enter Destination">
+  <button onclick="findRoute()"><i class="fas fa-search"></i></button>
+  <button id="micButton"><i class="fas fa-microphone"></i></button>
+</div>
+
+<!-- Map -->
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script src="{{ url_for('static', filename='js/live.js') }}"></script>
+</body>
+</html>

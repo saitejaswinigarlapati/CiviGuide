@@ -1,0 +1,72 @@
+body, html {
+  margin:0; padding:0; height:100%; font-family:Arial,sans-serif; background:#121212; color:white; overflow:hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  top: 0; left: 0;
+  background: linear-gradient(145deg, #111, #222);
+  overflow-x: hidden;
+  transition: 0.3s;
+  padding-top: 60px;
+  z-index: 2000;
+  color: white;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+  border-right: 1px solid #333;
+}
+.sidebar h2, .sidebar h3 { padding-left: 15px; font-size: 18px; margin-bottom: 10px; color: #00ffff; }
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  text-decoration: none;
+  font-size: 16px;
+  color: white;
+  transition: 0.3s ease;
+  border-radius: 6px;
+}
+.sidebar a:hover { background: #00ffff; color: #111; font-weight: bold; transform: scale(1.05); }
+.sidebar a i { width: 24px; text-align: center; font-size: 18px; color: #00ffff; }
+.sidebar ul { list-style: none; padding: 0; margin: 0 0 15px 15px; line-height: 1.8; }
+
+/* Badges */
+.badge { padding: 3px 8px; border-radius: 6px; font-weight: bold; margin-left: 5px; }
+.green { background:#4CAF50; color:white; }
+.blue { background:#2196F3; color:white; }
+.red { background:#f44336; color:white; }
+.yellow { background:#FFC107; color:black; }
+
+/* Quote card */
+.quote-card { background: #333; padding: 12px 15px; border-radius: 10px; margin: 0 15px 15px 15px; font-style: italic; color: #ffeb3b; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+
+/* Hamburger */
+.hamburger {
+  position: fixed; top: 15px; left: 15px;
+  z-index: 3000; cursor: pointer;
+  font-size: 28px; color: #00ffff;
+  background: #222; padding: 10px 14px; border-radius: 8px;
+  user-select: none; transition: 0.3s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.hamburger:hover { background: #ffeb3b; color: #111; transform: scale(1.1); }
+
+/* Controls */
+.controls {
+  padding:10px; background:#1a1a1a; color:white; display:flex; gap:10px; flex-wrap:wrap; position:relative; z-index:1000;
+}
+input, button, select { padding:6px; border-radius:5px; border:1px solid #555; background:#2a2a2a; color:white; }
+
+/* Map */
+#map { flex:1; height:100%; }
+
+#distanceBox {
+  position:absolute; top:60px; right:20px; background: rgba(0,0,0,0.7); color:white;
+  padding:8px 12px; border-radius:8px; z-index:1000;
+}
+
+/* Leaflet routing text black */
+.leaflet-routing-container, .leaflet-routing-container * { color:black !important; font-weight:500; }

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civi Guide - Live Navigation</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+
+<div id="splash">
+  <h1>Welcome to CiviGuide</h1>
+  <p>Citizen Information & Services Platform</p>
+</div>
+
+<div id="main">
+  <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
+
+<a href="{{ url_for('signup') }}" title="Login/Signup" class="userIcon">
+  <i class="fas fa-user"></i>
+</a>
+
+   <!-- Sidebar -->
+<div id="mySidebar" class="sidebar">
+  <h2>Features</h2>
+  <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+  <a href="{{ url_for('live') }}"><i class="fa-solid fa-triangle-exclamation"></i> Disaster Zone Detection</a>
+  <a href="{{ url_for('alternate') }}"><i class="fa-solid fa-route"></i> Alternate Route Suggestion</a>
+  <a href="{{ url_for('border_alert') }}"><i class="fa-solid fa-map"></i> National Border Alert</a>
+  <a href="{{ url_for('emergency') }}"><i class="fa-solid fa-ambulance"></i> Emergency Services Locator</a>
+  <a href="{{ url_for('safety_tips') }}"><i class="fa-solid fa-shield-halved"></i> Safety Tips & Guides</a>
+
+  <hr>
+  <h3>Emergency Numbers</h3>
+  <ul>
+    <li>🚑 Ambulance: <span class="badge green" onclick="window.location.href='tel:108'">108 / 102</span></li>
+    <li>👮 Police: <span class="badge blue" onclick="window.location.href='tel:100'">100</span></li>
+    <li>🔥 Fire: <span class="badge red" onclick="window.location.href='tel:101'">101</span></li>
+    <li>🌐 NDRF: <span class="badge yellow" onclick="window.location.href='tel:1078'">1078</span></li>
+  </ul>
+
+  <hr>
+  <h3>Quote of the Day</h3>
+  <div class="quote-card">"Preparedness today saves lives tomorrow."</div>
+</div>
+  <div class="topbar">
+    <input id="source" placeholder="Source" class="top-input">
+    <button onclick="reverseLocations()" class="top-btn">&#8646;</button>
+    <input id="destination" placeholder="Destination" class="top-input">
+    <button id="searchBtn" class="top-btn">&#128269;</button>
+    <button id="micButton" class="top-btn">&#127908;</button>
+  </div>
+
+  <div id="map"></div>
+  <div id="distanceBox">Distance: 0 km | ETA: 0 min</div>
+</div>
+
+<!-- Feedback Popup -->
+<div id="feedbackPopup">
+  <div id="closePopup" onclick="closeFeedback()">×</div>
+  <h2>Feedback</h2>
+  <div id="stars">
+    <span class="star" onclick="highlightStars(1)">★</span>
+    <span class="star" onclick="highlightStars(2)">★</span>
+    <span class="star" onclick="highlightStars(3)">★</span>
+    <span class="star" onclick="highlightStars(4)">★</span>
+    <span class="star" onclick="highlightStars(5)">★</span>
+  </div>
+  <textarea placeholder="Optional message"></textarea>
+  <button onclick="submitFeedback()">Submit</button>
+</div>
+
+<!-- Floating Cloud Feedback Icon -->
+<div class="floatingCloud" onclick="showFeedbackPopup()" title="Give Feedback">
+  <i class="fas fa-cloud"></i>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+</html>

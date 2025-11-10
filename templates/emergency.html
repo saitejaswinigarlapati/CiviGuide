@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Civi Guide - Emergency Services</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/emergence.css') }}">
+</head>
+<body>
+
+<!-- Hamburger -->
+<div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
+
+<!-- Sidebar -->
+<div id="mySidebar" class="sidebar">
+  <h2>Features</h2>
+  <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+  <a href="{{ url_for('live') }}"><i class="fa-solid fa-triangle-exclamation"></i> Disaster Zone Detection</a>
+  <a href="{{ url_for('alternate') }}"><i class="fa-solid fa-route"></i> Alternate Route Suggestion</a>
+  <a href="{{ url_for('border_alert') }}"><i class="fa-solid fa-map"></i> National Border Alert</a>
+  <a href="{{ url_for('emergency') }}"><i class="fa-solid fa-ambulance"></i> Emergency Services Locator</a>
+  <a href="{{ url_for('safety_tips') }}"><i class="fa-solid fa-shield-halved"></i> Safety Tips & Guides</a>
+
+  <hr>
+  <h3>Emergency Numbers</h3>
+  <ul>
+    <li>🚑 Ambulance: <span class="badge green" onclick="window.location.href='tel:108'">108 / 102</span></li>
+    <li>👮 Police: <span class="badge blue" onclick="window.location.href='tel:100'">100</span></li>
+    <li>🔥 Fire: <span class="badge red" onclick="window.location.href='tel:101'">101</span></li>
+    <li>🌐 NDRF: <span class="badge yellow" onclick="window.location.href='tel:1078'">1078</span></li>
+  </ul>
+
+  <hr>
+  <h3>Quote of the Day</h3>
+  <div class="quote-card">"Preparedness today saves lives tomorrow."</div>
+</div>
+
+
+<!-- Controls -->
+<div class="controls">
+  <input id="source" placeholder="Source Location">
+  <input id="destination" placeholder="Destination Location">
+  <input id="via" placeholder="Optional Via (Intermediate)">
+  <select id="serviceType">
+    <option value="all">All Services</option>
+    <option value="police">Police</option>
+    <option value="hospital">Hospital</option>
+    <option value="fire_station">Fire Station</option>
+    <option value="pharmacy">Pharmacy</option>
+    <option value="ambulance">Ambulance</option>
+    <option value="shelter">Disaster Shelter</option>
+    <option value="rescue">Rescue Station</option>
+  </select>
+  <button onclick="showRouteServices()">Show Services</button>
+  <button id="micButton">&#127908;</button>
+</div>
+
+<!-- Map -->
+<div id="map"></div>
+<div id="distanceBox">Distance: 0 km | ETA: 0 min</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script src="https://unpkg.com/leaflet-polylinedecorator/dist/leaflet.polylineDecorator.min.js"></script>
+<script src="{{ url_for('static', filename='js/emergence.js') }}"></script>
+</body>
+</html>

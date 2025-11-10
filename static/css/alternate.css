@@ -1,0 +1,107 @@
+/* Body */
+body { 
+  margin:0; 
+  font-family: Arial, sans-serif; 
+  background:#121212; 
+  color:white; 
+  overflow-x: hidden;
+}
+
+/* Map */
+#map { 
+  height: 80vh; 
+  width: 100%; 
+}
+
+/* Animated Heading */
+h2.animated-heading {
+  text-align:center; 
+  padding:20px; 
+  font-size: 28px; 
+  color:#ff9800;
+  animation: glow 2s infinite alternate;
+}
+@keyframes glow {
+  0% { text-shadow: 0 0 5px #ff9800, 0 0 10px #ff9800; }
+  100% { text-shadow: 0 0 20px #fff, 0 0 40px #ff9800; }
+}
+
+/* Sidebar */
+.sidebar {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  top: 0; left: 0;
+  background: linear-gradient(145deg, #111, #222);
+  overflow-x: hidden;
+  transition: 0.3s;
+  padding-top: 60px;
+  z-index: 2000;
+  color: white;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+  border-right: 1px solid #333;
+}
+.sidebar h2, .sidebar h3 { padding-left: 15px; margin-bottom: 10px; color:#00ffff; }
+.sidebar a {
+  padding: 10px 15px;
+  display: block;
+  text-decoration: none;
+  font-size: 16px;
+  color: white;
+  transition: 0.3s;
+  white-space: nowrap;
+}
+.sidebar a:hover { background: #00ffff; color:#111; font-weight:bold; }
+.sidebar ul { list-style:none; padding-left:20px; }
+.sidebar ul li { margin-bottom:15px; font-size:16px; }
+
+/* Badges */
+.badge { padding: 3px 8px; border-radius:6px; font-weight:bold; margin-left:5px; }
+.green { background:#4CAF50; color:white; }
+.blue { background:#2196F3; color:white; }
+.red { background:#f44336; color:white; }
+.yellow { background:#FFC107; color:black; }
+
+/* Quote */
+.quote-card { background:#333; padding:12px 15px; border-radius:10px; margin:15px; font-style:italic; color:#ffeb3b; box-shadow:0 4px 10px rgba(0,0,0,0.5); }
+
+/* Hamburger */
+.hamburger {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 3000;
+  cursor: pointer;
+  font-size: 26px;
+  color: #00ffff;
+  background: #222;
+  padding: 12px 16px;
+  border-radius: 10px;
+  user-select: none;
+  transition: 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+.hamburger:hover { 
+  background: #ffeb3b; 
+  color: #111; 
+  transform: scale(1.1);
+}
+
+/* Routing container dark theme */
+.leaflet-routing-container {
+  background: #121212 !important;
+  color: white !important;
+  border: 1px solid #333 !important;
+}
+.leaflet-routing-container .leaflet-routing-instructions li:hover {
+  background: #b71c57 !important;
+  color:white !important;
+  cursor:pointer;
+}
+.leaflet-routing-container::-webkit-scrollbar {
+  width: 8px;
+}
+.leaflet-routing-container::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}
