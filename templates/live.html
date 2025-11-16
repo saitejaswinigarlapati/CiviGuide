@@ -39,8 +39,8 @@
         <h2>Search Flood Areas on Map</h2>
 
         <form method="POST">
-            <input type="text" name="location1" placeholder="Start location..." required>
-            <input type="text" name="location2" placeholder="End location..." required>
+            <input type="text" id="source" name="location1" placeholder="Start location..." required>
+            <input type="text" id="destination" name="location2" placeholder="End location..." required>
             <button type="submit">Search</button>
         </form>
 
@@ -51,6 +51,13 @@
         {% if results %}
         <!-- MAP -->
         <div id="map"></div>
+
+        <!-- Alternative Route Prompt -->
+        <div id="altRoutePrompt" style="display:none; margin-top: 15px;">
+            <button id="altRouteBtn" style="background:#ff9800; color:#111; padding:10px 20px; border:none; border-radius:6px; cursor:pointer;">
+                ⚠️ Flood Ahead! Show Alternative Route
+            </button>
+        </div>
 
         <!-- FLOOD RESULT CARDS -->
         <div class="results">
@@ -74,7 +81,14 @@
 <!-- Sidebar toggle -->
 <script>
 function toggleSidebar() {
-    document.getElementById("mySidebar").classList.toggle("active");
+    const sidebar = document.getElementById('mySidebar');
+    const content = document.querySelector('.content-container');
+    sidebar.classList.toggle('active');
+    content.classList.toggle('active');
+
+    if (typeof map !== 'undefined') {
+        setTimeout(() => map.invalidateSize(), 300);
+    }
 }
 </script>
 
@@ -94,22 +108,24 @@ function getRadius(sev) {
     return 6;
 }
 
-/* Flood markers */
+/* Flood markers with metersRadius */
 let floodMarkers = [];
 {% for r in results %}
 var c = L.circleMarker([{{ r[2] }}, {{ r[3] }}], {
-    radius: getRadius("{{ r[4] }}"),
+    radius: getRadius("{{ r[4] }}"), // pixels for display
     color: 'rgba(0, 123, 255, 0.8)',
     fillColor: 'rgba(0, 123, 255, 0.4)',
     fillOpacity: 0.4,
     weight: 2
-}).bindPopup("<b>{{ r[1] }}</b><br>Severity: {{ r[4] }}<br>{{ r[5] }}");
+});
+c.metersRadius = 1000; // example: adjust according to severity or DB
 c.addTo(map);
+c.bindPopup("<b>{{ r[1] }}</b><br>Severity: {{ r[4] }}<br>{{ r[5] }}");
 floodMarkers.push(c);
 {% endfor %}
 
 /* Routing */
-L.Routing.control({
+var routingControl = L.Routing.control({
     waypoints: [
         L.latLng({{ lat1 }}, {{ lon1 }}),
         L.latLng({{ lat2 }}, {{ lon2 }})
@@ -124,6 +140,36 @@ L.Routing.control({
 /* Fit bounds */
 var group = L.featureGroup(floodMarkers);
 map.fitBounds(group.getBounds().pad(0.5));
+
+/* Check if route intersects flood */
+function routeIntersectsFlood(routeCoords) {
+    for (let zone of floodMarkers) {
+        const center = zone.getLatLng();
+        const radius = zone.metersRadius;
+        for (let point of routeCoords) {
+            const distance = map.distance([point.lat, point.lng], center);
+            if (distance < radius) return true;
+        }
+    }
+    return false;
+}
+
+routingControl.on('routesfound', function(e) {
+    const route = e.routes[0];
+    const coords = route.coordinates;
+
+    if (routeIntersectsFlood(coords)) {
+        const promptDiv = document.getElementById('altRoutePrompt');
+        const altBtn = document.getElementById('altRouteBtn');
+        promptDiv.style.display = 'block';
+
+        altBtn.onclick = () => {
+            const src = document.getElementById('source').value;
+            const dest = document.getElementById('destination').value;
+            window.location.href = `/alternate?src=${encodeURIComponent(src)}&dest=${encodeURIComponent(dest)}`;
+        };
+    }
+});
 {% endif %}
 </script>
 

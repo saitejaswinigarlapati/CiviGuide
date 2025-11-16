@@ -19,8 +19,8 @@ const disasterZones = [
 // Add disaster zone markers
 disasterZones.forEach(zone => {
     const circle = L.circle([zone.lat, zone.lng], {
-        color: 'red',
-        fillColor: '#f03',
+        color: zone.type.toLowerCase() === 'flood' ? 'blue' : 'red',
+        fillColor: zone.type.toLowerCase() === 'flood' ? '#3399ff' : '#f03',
         fillOpacity: 0.5,
         radius: zone.radius
     }).addTo(map);
@@ -31,16 +31,16 @@ disasterZones.forEach(zone => {
 // Sidebar toggle
 function toggleSidebar() {
     const sidebar = document.getElementById('mySidebar');
-    sidebar.style.width = sidebar.style.width === '260px' ? '0' : '260px';
-}
+    const content = document.querySelector('.content-container');
+    sidebar.classList.toggle('active');
+    content.classList.toggle('active');
 
-// Swap source/destination inputs
-function swapLocations() {
-    const src = document.getElementById('source');
-    const dest = document.getElementById('destination');
-    const temp = src.value;
-    src.value = dest.value;
-    dest.value = temp;
+    // Redraw map after sidebar toggle
+    if (typeof map !== 'undefined') {
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
+    }
 }
 
 // Geocode function using Nominatim
@@ -85,7 +85,32 @@ async function findRoute() {
             collapsible: true
         }).addTo(map);
 
+        // Fit map to route
         map.fitBounds([srcCoords, destCoords]);
+
+        // Check if route intersects flood zone
+        routingControl.on('routesfound', function(e) {
+            const route = e.routes[0];
+            const routePoints = route.coordinates.map(c => [c.lat, c.lng]);
+            let intersectsFlood = false;
+
+            routePoints.forEach(pt => {
+                disasterZones.forEach(zone => {
+                    if (zone.type.toLowerCase() === 'flood') {
+                        const distance = map.distance(pt, [zone.lat, zone.lng]);
+                        if (distance < zone.radius) intersectsFlood = true;
+                    }
+                });
+            });
+
+            if (intersectsFlood) {
+                // Show popup asking for alternative route
+                if (confirm("⚠️ The planned route passes through a flood area. Do you want an alternative route?")) {
+                    // Redirect to alternate route page
+                    window.location.href = `{{ url_for('alternate') }}?source=${encodeURIComponent(sourceInput)}&destination=${encodeURIComponent(destInput)}`;
+                }
+            }
+        });
 
     } catch (err) {
         alert('Error: ' + err.message);
@@ -101,7 +126,9 @@ if (SpeechRecognition) {
     recognition.continuous = false;
     recognition.lang = 'en-US';
 
-    micBtn.onclick = () => recognition.start();
+    if (micBtn) {
+        micBtn.onclick = () => recognition.start();
+    }
 
     recognition.onresult = function (event) {
         const text = event.results[0][0].transcript;
@@ -135,20 +162,4 @@ if (navigator.geolocation) {
     }, { enableHighAccuracy: true });
 } else {
     alert('Geolocation not supported by this browser.');
-}
-
-
-// Toggle sidebar
-function toggleSidebar() {
-    const sidebar = document.getElementById('mySidebar');
-    const content = document.querySelector('.content-container');
-    sidebar.classList.toggle('active');
-    content.classList.toggle('active');
-
-    // Redraw map after sidebar toggle
-    if (typeof map !== 'undefined') {
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 300);
-    }
 }

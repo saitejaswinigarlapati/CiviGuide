@@ -1,20 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Alternate Routes</title>
+
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/alternate.css') }}">
 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/alternate.css') }}">
 </head>
 <body>
 
-  <!-- Hamburger -->
-  <div class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+<!-- Hamburger -->
+<div class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
 
-  <!-- Sidebar -->
+<!-- Sidebar -->
 <div id="mySidebar" class="sidebar">
   <h2>Features</h2>
   <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
@@ -38,14 +43,68 @@
   <div class="quote-card">"Preparedness today saves lives tomorrow."</div>
 </div>
 
-  <!-- Heading -->
-  <h2 class="animated-heading">🚧 Suggested Alternate Route for Your Safety</h2>
+<!-- Page Heading -->
+<div class="content-container">
+  <div class="container">
+    <h2 class="animated-heading">🚧 Suggested Alternate Route for Your Safety</h2>
 
-  <!-- Map -->
-  <div id="map"></div>
+    <!-- Map -->
+    <div id="map" style="height:70vh; margin-top:15px; border-radius:10px;"></div>
+  </div>
+</div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<!-- JS Libraries -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<!-- Sidebar Toggle -->
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('mySidebar');
+    const content = document.querySelector('.content-container');
+    sidebar.classList.toggle('active');
+    content.classList.toggle('active');
+
+    if (typeof map !== 'undefined') {
+        setTimeout(() => map.invalidateSize(), 300);
+    }
+}
+</script>
+
+<!-- Alternate Route Map -->
+<script>
+{% if src and dest %}
+var map = L.map('map').setView([20.5937, 78.9629], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+L.Routing.control({
+    waypoints: [
+        L.latLng({{ src[0] }}, {{ src[1] }}),
+        L.latLng({{ dest[0] }}, {{ dest[1] }})
+    ],
+    lineOptions: {
+        styles: [{ color: 'green', opacity: 0.8, weight: 6 }]
+    },
+    createMarker: function(i, wp) {
+        return L.marker(wp.latLng).bindPopup(i === 0 ? 'Start' : 'Destination');
+    },
+    routeWhileDragging: false,
+    addWaypoints: false,
+    draggableWaypoints: false,
+    router: L.Routing.osrmv1({
+        serviceUrl: 'https://router.project-osrm.org/route/v1'
+    })
+}).addTo(map);
+
+map.fitBounds([
+    [{{ src[0] }}, {{ src[1] }}],
+    [{{ dest[0] }}, {{ dest[1] }}]
+], { padding: [50,50] });
+{% endif %}
+</script>
 
 <script src="{{ url_for('static', filename='js/alternate.js') }}"></script>
 </body>
