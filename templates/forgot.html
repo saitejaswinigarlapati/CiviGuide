@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Forgot</title>
+  <title>Reset Password</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -16,8 +16,10 @@
     {% endwith %}
 
     <form method="POST">
-      <input name="email" placeholder="Enter your email" required type="email">
-      <input type="submit" value="Send Reset Link">
+      <input type="text" name="username" placeholder="Enter your username" required>
+      <input type="password" name="new_password" placeholder="New password" required>
+      <input type="password" name="confirm_password" placeholder="Confirm new password" required>
+      <input type="submit" value="Reset Password">
     </form>
 
     <div class="link-text">

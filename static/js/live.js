@@ -136,3 +136,19 @@ if (navigator.geolocation) {
 } else {
     alert('Geolocation not supported by this browser.');
 }
+
+
+// Toggle sidebar
+function toggleSidebar() {
+    const sidebar = document.getElementById('mySidebar');
+    const content = document.querySelector('.content-container');
+    sidebar.classList.toggle('active');
+    content.classList.toggle('active');
+
+    // Redraw map after sidebar toggle
+    if (typeof map !== 'undefined') {
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
+    }
+}

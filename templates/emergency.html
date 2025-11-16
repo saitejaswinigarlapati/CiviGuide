@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Civi Guide - Emergency Services</title>
 
+<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
@@ -14,6 +15,7 @@
 
 <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
 
+<!-- Sidebar -->
 <div id="mySidebar" class="sidebar">
   <h2>Features</h2>
   <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
@@ -35,11 +37,13 @@
 <main class="container">
   <h2>🚑 Emergency Services</h2>
 
+  <!-- Search -->
   <div class="route-search">
-    <input type="text" id="destination" placeholder="Enter Location">
-    <button onclick="findServicesAtPoint()">Find Services</button>
+    <input type="text" id="destination" placeholder="Enter location to find nearby services">
+    <button onclick="searchDestination()">Find Services</button>
   </div>
 
+  <!-- Filters -->
   <div class="filter-buttons">
     <button onclick="filterServices('all')">All Services</button>
     <button onclick="filterServices('hospital')">Hospitals</button>
@@ -47,6 +51,7 @@
     <button onclick="filterServices('fire')">Fire Stations</button>
   </div>
 
+  <!-- Map & Directions -->
   <div class="map-layout">
     <div id="map"></div>
     <div id="directions-panel">
@@ -58,14 +63,17 @@
     </div>
   </div>
 
+  <!-- Services List -->
   <section id="services-section">
     <h3>Emergency Services</h3>
     <div id="services" class="services-list"></div>
   </section>
 </main>
 
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 <script src="{{ url_for('static', filename='js/emergence.js') }}"></script>
 
 <script>

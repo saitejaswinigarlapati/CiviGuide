@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <title>Edit Flood Area</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="edit-flood-card">
+    <h2>Edit Flood Area</h2>
+    <form method="POST">
+      <input type="text" name="area_name" value="{{ area['area_name'] }}" placeholder="Area Name" required>
+      <input type="number" step="0.000001" name="latitude" value="{{ area['latitude'] }}" placeholder="Latitude" required>
+      <input type="number" step="0.000001" name="longitude" value="{{ area['longitude'] }}" placeholder="Longitude" required>
+      <select name="severity" required>
+        <option value="Low" {% if area['severity']=='Low' %}selected{% endif %}>Low</option>
+        <option value="Medium" {% if area['severity']=='Medium' %}selected{% endif %}>Medium</option>
+        <option value="High" {% if area['severity']=='High' %}selected{% endif %}>High</option>
+      </select>
+      <input type="text" name="description" value="{{ area['description'] }}" placeholder="Description" required>
+
+      <div class="button-group">
+        <button type="submit" class="small-btn">Update</button>
+        <a href="{{ url_for('admin_panel') }}" class="small-btn">Cancel</a>
+      </div>
+    </form>
+  </div>
+</body>
+
+</html>

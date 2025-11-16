@@ -5,42 +5,22 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from geopy.geocoders import Nominatim
+from flood_db import init_flood_db, get_all_flood_areas, search_flood_area,add_flood_area
 
 # ------------ Config ------------
 DB_NAME = "users.db"
 UPLOAD_FOLDER = "static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 ADMIN_DEFAULT_USER = "admin"
-ADMIN_DEFAULT_PASS = "adminpass"  # change for production
+ADMIN_DEFAULT_PASS = "adminpass"
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ---------- Database ----------
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            email TEXT UNIQUE,
-            password TEXT,
-            profile_pic TEXT,
-            is_admin INTEGER DEFAULT 0
-        )
-    """)
-    # ensure admin exists
-    c.execute("SELECT * FROM users WHERE username=?", (ADMIN_DEFAULT_USER,))
-    if not c.fetchone():
-        c.execute("INSERT INTO users (username, email, password, is_admin) VALUES (?, ?, ?, 1)",
-                  (ADMIN_DEFAULT_USER, "admin@example.local", generate_password_hash(ADMIN_DEFAULT_PASS)))
-    conn.commit()
-    conn.close()
-
-init_db()
+geolocator = Nominatim(user_agent="flood_app")
 
 # ---------- Utilities ----------
 def allowed_file(filename):
@@ -55,28 +35,60 @@ def save_profile_pic(file_storage):
         return filename
     return None
 
-# ---------- Decorators ----------
 def login_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated(*args, **kwargs):
         if "user_id" not in session:
             flash("Please login first.", "warning")
             return redirect(url_for("login"))
         return f(*args, **kwargs)
-    return decorated_function
+    return decorated
 
 def admin_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated(*args, **kwargs):
         if not session.get("is_admin"):
             flash("Admin access required.", "danger")
             return redirect(url_for("login"))
         return f(*args, **kwargs)
-    return decorated_function
+    return decorated
+
+def get_coordinates(location_name):
+    try:
+        loc = geolocator.geocode(location_name)
+        if loc:
+            return loc.latitude, loc.longitude
+    except:
+        pass
+    return None, None
+
+# ---------- Initialize DB ----------
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            email TEXT UNIQUE,
+            password TEXT,
+            profile_pic TEXT,
+            is_admin INTEGER DEFAULT 0
+        )
+    """)
+    # Ensure default admin exists
+    c.execute("SELECT * FROM users WHERE username=?", (ADMIN_DEFAULT_USER,))
+    if not c.fetchone():
+        c.execute("INSERT INTO users (username, email, password, is_admin) VALUES (?, ?, ?, 1)",
+                (ADMIN_DEFAULT_USER, "admin@example.local", generate_password_hash(ADMIN_DEFAULT_PASS)))
+    conn.commit()
+    conn.close()
+
+init_db()
 
 # ---------- Routes ----------
 
-# Index → always login
+# Index → redirect to login
 @app.route("/")
 def index():
     return redirect(url_for("login"))
@@ -95,7 +107,7 @@ def signup():
         c = conn.cursor()
         try:
             c.execute("INSERT INTO users (username, email, password, profile_pic) VALUES (?, ?, ?, ?)",
-                      (username, email, generate_password_hash(password), pic_filename))
+                    (username, email, generate_password_hash(password), pic_filename))
             conn.commit()
             flash("Signup successful! Please login.", "success")
             return redirect(url_for("login"))
@@ -122,18 +134,12 @@ def login():
             session['user_id'] = user[0]
             session['user_name'] = user[1]
             session['email'] = user[2]
-            session['is_admin'] = int(user[5])  # <-- ensure integer 0 or 1
+            session['is_admin'] = int(user[5])
             flash(f"Welcome, {user[1]}!", "success")
-
-            # Correct redirect
-            if session['is_admin'] == 1:
-                return redirect(url_for("admin_panel"))
-            else:
-                return redirect(url_for("home"))
+            return redirect(url_for("admin_panel") if session['is_admin']==1 else url_for("home"))
         else:
             flash("Invalid username or password!", "danger")
     return render_template("login.html")
-
 
 # Logout
 @app.route("/logout")
@@ -149,21 +155,42 @@ def logout():
 def home():
     return render_template("home.html", username=session['user_name'], email=session['email'])
 
-# Forgot password simulation
+# Reset password using username
 @app.route("/forgot", methods=["GET","POST"])
 def forgot():
     if request.method == "POST":
-        email = request.form["email"].strip()
+        username = request.form.get("username", "").strip()
+        new_pass = request.form.get("new_password", "")
+        confirm_pass = request.form.get("confirm_password", "")
+
+        if not username or not new_pass or not confirm_pass:
+            flash("All fields are required!", "danger")
+            return redirect(url_for("forgot"))
+
+        if new_pass != confirm_pass:
+            flash("Passwords do not match!", "danger")
+            return redirect(url_for("forgot"))
+
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE email=?", (email,))
+        c.execute("SELECT id FROM users WHERE username=?", (username,))
         user = c.fetchone()
-        conn.close()
+
         if user:
-            flash("Password reset link would be sent to the email (simulation).", "success")
+            from werkzeug.security import generate_password_hash
+            c.execute("UPDATE users SET password=? WHERE id=?",
+                    (generate_password_hash(new_pass), user[0]))
+            conn.commit()
+            conn.close()
+            flash("Password reset successfully! You can now login.", "success")
+            return redirect(url_for("login"))
         else:
-            flash("Email not found!", "danger")
+            conn.close()
+            flash("Username not found!", "danger")
+            return redirect(url_for("forgot"))
+
     return render_template("forgot.html")
+
 
 # Profile routes
 @app.route("/view_profile")
@@ -265,10 +292,48 @@ def delete_account():
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
-# Feature pages
-@app.route('/live')
+# ---------- Feature Pages ----------
+
+# LIVE / Search Flood Map
+@app.route("/live", methods=["GET", "POST"], endpoint="live")
 @login_required
-def live(): return render_template('live.html')
+def search_location_map():
+    results = []
+    error = None
+    lat1 = lon1 = lat2 = lon2 = None
+
+    if request.method == "POST":
+        loc1 = request.form.get("location1")
+        loc2 = request.form.get("location2")
+
+        lat1, lon1 = get_coordinates(loc1)
+        lat2, lon2 = get_coordinates(loc2)
+
+        if None in (lat1, lon1, lat2, lon2):
+            error = "One or both locations could not be found. Please enter valid location names."
+        else:
+            buffer = 0.5
+            min_lat, max_lat = min(lat1, lat2) - buffer, max(lat1, lat2) + buffer
+            min_lon, max_lon = min(lon1, lon2) - buffer, max(lon1, lon2) + buffer
+
+            conn = sqlite3.connect("flood.db")
+            c = conn.cursor()
+            c.execute("""
+                SELECT * FROM flood_zones
+                WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?
+            """, (min_lat, max_lat, min_lon, max_lon))
+            results = c.fetchall()
+            conn.close()
+
+    return render_template(
+        "live.html",
+        results=results,
+        error=error,
+        lat1=lat1,
+        lon1=lon1,
+        lat2=lat2,
+        lon2=lon2
+    )
 
 @app.route('/alternate')
 @login_required
@@ -290,22 +355,27 @@ def safety_tips(): return render_template('safety.html')
 @app.route("/admin")
 @admin_required
 def admin_panel():
+    # Fetch users
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT * FROM users ORDER BY id DESC")
+    c.execute("SELECT id, username, email, profile_pic, is_admin FROM users ORDER BY id DESC")
     users = c.fetchall()
     conn.close()
-    return render_template("admin.html", users=users)
 
-# Admin delete user
+    # Fetch flood areas
+    flood_areas = get_all_flood_areas()
+
+    return render_template("admin.html", users=users, flood_areas=flood_areas)
+
+
+
 @app.route("/admin/delete/<int:user_id>", methods=["POST"])
 @admin_required
 def admin_delete_user(user_id):
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    # Prevent deleting main admin
     c.execute("SELECT username, profile_pic FROM users WHERE id=?", (user_id,))
     user = c.fetchone()
     if user and user["username"] == "admin":
@@ -324,5 +394,76 @@ def admin_delete_user(user_id):
     flash("User deleted successfully.", "success")
     return redirect(url_for("admin_panel"))
 
+
+@app.route("/admin/add_flood_area", methods=["POST"])
+@admin_required
+def admin_add_flood_area():
+    area_name = request.form['area_name']
+    latitude = float(request.form['latitude'])
+    longitude = float(request.form['longitude'])
+    severity = request.form['severity']
+    description = request.form['description']
+
+    try:
+        add_flood_area(area_name, latitude, longitude, severity, description)
+        flash("Flood area added successfully!")
+    except sqlite3.IntegrityError:
+        flash("This area already exists.")
+    return redirect(url_for('admin_panel'))
+
+@app.route("/admin/delete_flood_area/<int:area_id>", methods=["POST"])
+@admin_required
+def admin_delete_flood_area(area_id):
+    conn = sqlite3.connect("flood.db")
+    c = conn.cursor()
+    c.execute("DELETE FROM flood_zones WHERE id = ?", (area_id,))
+    conn.commit()
+    conn.close()
+    flash("Flood area deleted successfully!")
+    return redirect(url_for('admin_panel'))
+
+
+
+@app.route("/admin/edit_flood_area/<int:area_id>", methods=["GET", "POST"])
+@admin_required
+def admin_edit_flood_area(area_id):
+    conn = sqlite3.connect("flood.db")
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    # GET: show edit form
+    if request.method == "GET":
+        c.execute("SELECT * FROM flood_zones WHERE id=?", (area_id,))
+        area = c.fetchone()
+        conn.close()
+        if not area:
+            flash("Flood area not found.", "danger")
+            return redirect(url_for("admin_panel"))
+        return render_template("edit_flood_area.html", area=area)
+
+    # POST: update flood area
+    area_name = request.form['area_name']
+    latitude = float(request.form['latitude'])
+    longitude = float(request.form['longitude'])
+    severity = request.form['severity']
+    description = request.form['description']
+
+    try:
+        c.execute("""
+            UPDATE flood_zones
+            SET area_name=?, latitude=?, longitude=?, severity=?, description=?
+            WHERE id=?
+        """, (area_name, latitude, longitude, severity, description, area_id))
+        conn.commit()
+        flash("Flood area updated successfully!")
+    except sqlite3.IntegrityError:
+        flash("Area name already exists!")
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_panel"))
+
+
+# ---------- Run App ----------
 if __name__ == "__main__":
     app.run(debug=True)

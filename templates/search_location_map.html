@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flood Areas Map</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #121212;
+            color: #fff;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 900px;
+            margin: 25px auto;
+        }
+
+        h2 { margin-bottom: 15px; }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        input {
+            padding: 12px;
+            font-size: 15px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #1e1e1e;
+            color: #fff;
+            flex: 1;
+            min-width: 160px;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 15px;
+            border-radius: 6px;
+            background: #4ec9b0;
+            color: black;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover { background: #3bb399; }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        /* FLOOD CARDS */
+        .results {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 10px;
+            padding-bottom: 50px;
+        }
+
+        .flood-card {
+            background: #181818;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .flood-title { color: #4ec9b0; font-size: 20px; font-weight: bold; }
+        .severity { color: #ff6f6f; font-weight: bold; }
+        .coords { opacity: 0.7; margin-top: 8px; }
+        .description { opacity: 0.85; margin-top: 8px; }
+
+        /* FIX LEAFLET ROUTING MACHINE */
+        .leaflet-routing-container {
+            background: #ffffff !important;
+            color: #000 !important;
+            border-radius: 10px !important;
+            max-height: 300px !important;
+            overflow-y: auto !important;
+            padding: 10px !important;
+            font-size: 14px !important;
+        }
+
+        .leaflet-routing-container * {
+            color: #000 !important;
+        }
+
+        .leaflet-routing-container.leaflet-bar {
+            right: 20px !important;
+            top: 20px !important;
+        }
+
+        .leaflet-routing-icon {
+            filter: invert(0) !important;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h2>Search Flood Areas on Map</h2>
+
+    <form method="POST">
+        <input type="text" name="location1" placeholder="Start location..." required>
+        <input type="text" name="location2" placeholder="End location..." required>
+        <button type="submit">Search</button>
+    </form>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if results %}
+    <!-- MAP -->
+    <div id="map"></div>
+
+    <!-- FLOOD RESULT CARDS -->
+    <div class="results">
+        {% for r in results %}
+        <div class="flood-card">
+            <div class="flood-title">{{ r[1] }}</div>
+            <div class="severity">Severity: {{ r[4] }}</div>
+            <div class="description">{{ r[5] }}</div>
+            <div class="coords">Coordinates: {{ r[2] }}, {{ r[3] }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- JS LIBRARIES -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<script>
+{% if results %}
+    var map = L.map('map').setView([{{ results[0][2] }}, {{ results[0][3] }}], 7);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    function getRadius(sev) {
+        if (sev === "Severe") return 16;
+        if (sev === "High") return 12;
+        if (sev === "Medium") return 8;
+        return 6;
+    }
+
+    /* FLOOD ZONES */
+    let floodMarkers = [];
+    {% for r in results %}
+    var c = L.circleMarker([{{ r[2] }}, {{ r[3] }}], {
+        radius: getRadius("{{ r[4] }}"),
+        color: 'rgba(0, 123, 255, 0.8)',
+        fillColor: 'rgba(0, 123, 255, 0.4)',
+        fillOpacity: 0.4,
+        weight: 2
+    }).bindPopup("<b>{{ r[1] }}</b><br>Severity: {{ r[4] }}<br>{{ r[5] }}");
+    c.addTo(map);
+    floodMarkers.push(c);
+    {% endfor %}
+
+    /* ROUTING */
+    L.Routing.control({
+        waypoints: [
+            L.latLng({{ lat1 }}, {{ lon1 }}),
+            L.latLng({{ lat2 }}, {{ lon2 }})
+        ],
+        lineOptions: {
+            styles: [
+                { color: 'red', opacity: 1, weight: 2 },
+            ]
+        },
+        createMarker: () => null,
+        addWaypoints: false,
+        draggableWaypoints: false,
+        router: L.Routing.osrmv1({
+            serviceUrl: 'https://router.project-osrm.org/route/v1'
+        })
+    }).addTo(map);
+
+    /* FIT BOUNDS */
+    var group = L.featureGroup(floodMarkers);
+    map.fitBounds(group.getBounds().pad(0.5));
+{% endif %}
+</script>
+
+</body>
+</html>

@@ -4,7 +4,7 @@ let allServices = [];
 let markers = [];
 let voiceEnabled = true;
 
-// --- Init map ---
+// --- Initialize Map ---
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: 'Map data © OpenStreetMap contributors'
 }).addTo(map);
@@ -52,19 +52,21 @@ async function loadNearbyServices(lat, lon) {
   loadMarkers(allServices);
 }
 
-// --- Haversine distance ---
+// --- Haversine Distance ---
 function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// --- Render service cards ---
+// --- Render Services ---
 function renderServices(list) {
   const container = document.getElementById('services');
   container.innerHTML = '';
   if (!list.length) return container.innerHTML = `<p>No services found.</p>`;
-  list.forEach((s, idx) => {
+  list.forEach(s => {
     const colorClass = s.type === "hospital" ? "hospital" : s.type === "police" ? "police" : "fire";
     container.innerHTML += `
       <div class="service-card ${colorClass}">
@@ -77,7 +79,7 @@ function renderServices(list) {
   });
 }
 
-// --- Map markers ---
+// --- Map Markers ---
 function loadMarkers(list) {
   markers.forEach(m => map.removeLayer(m));
   markers = [];
@@ -95,7 +97,7 @@ function loadMarkers(list) {
   }
 }
 
-// --- Filter by type ---
+// --- Filter Services ---
 function filterServices(type) {
   if (type === 'all') {
     renderServices(allServices);
@@ -107,14 +109,42 @@ function filterServices(type) {
   }
 }
 
-// --- Show single service marker ---
-function showOnMapByCoords(lat, lon) {
+// --- Show Route from User to Service ---
+async function showOnMapByCoords(lat, lon) {
+  if (!userMarker) {
+    alert("User location not available!");
+    return;
+  }
+
+  const userLatLng = userMarker.getLatLng();
+  const destLatLng = L.latLng(lat, lon);
+
   if (routingControl) map.removeControl(routingControl);
-  const marker = L.marker([lat, lon]).addTo(map);
-  map.setView([lat, lon], 14);
+
+  routingControl = L.Routing.control({
+    waypoints: [userLatLng, destLatLng],
+    routeWhileDragging: false,
+    addWaypoints: false,
+    show: false
+  }).addTo(map);
+
+  routingControl.on('routesfound', function(e) {
+    const route = e.routes[0];
+    const instructions = route.instructions.map(inst => `<li>${inst.text}</li>`).join('');
+    document.getElementById('directions-content').innerHTML = `<ol>${instructions}</ol>`;
+
+    if (voiceEnabled) {
+      route.instructions.forEach((inst, i) => speakInstruction(inst.text, i * 1000));
+    }
+  });
+
+  routingControl.on('routeselected', function() {
+    const bounds = L.latLngBounds([userLatLng, destLatLng]);
+    map.fitBounds(bounds.pad(0.2));
+  });
 }
 
-// --- Voice synthesis ---
+// --- Voice ---
 function speakInstruction(text, delay = 0) {
   setTimeout(() => {
     const utter = new SpeechSynthesisUtterance(text);
@@ -130,88 +160,18 @@ function toggleVoice() {
   if (!voiceEnabled) speechSynthesis.cancel();
 }
 
-// --- Geocoding ---
-async function geocode(location) {
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`);
+// --- Search Destination ---
+async function searchDestination() {
+  const query = document.getElementById('destination').value;
+  if (!query) return alert("Enter a location!");
+
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
   const data = await res.json();
-  return data.length ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
-}
+  if (!data.length) return alert("Location not found!");
 
-// --- Find route ---
-async function findRoute() {
-  const source = document.getElementById('source').value;
-  const dest = document.getElementById('destination').value;
+  const lat = parseFloat(data[0].lat);
+  const lon = parseFloat(data[0].lon);
 
-  const startCoords = await geocode(source);
-  const endCoords = await geocode(dest);
-
-  if (!startCoords || !endCoords) {
-    alert("Could not find locations!");
-    return;
-  }
-
-  if (routingControl) map.removeControl(routingControl);
-
-  routingControl = L.Routing.control({
-    waypoints: [
-      L.latLng(startCoords[0], startCoords[1]),
-      L.latLng(endCoords[0], endCoords[1])
-    ],
-    routeWhileDragging: false,
-    addWaypoints: false
-  }).addTo(map);
-
-  routingControl.on('routesfound', function (e) {
-    fetchServicesAlongRoute();
-  });
-}
-
-// --- Fetch services along route ---
-async function fetchServicesAlongRoute() {
-  if (!routingControl || !routingControl._routes) return;
-
-  const routeCoords = routingControl._routes[0].coordinates;
-  const sampledPoints = [];
-  const step = Math.max(1, Math.floor(routeCoords.length / 20)); // ~20 points along route
-  for (let i = 0; i < routeCoords.length; i += step) sampledPoints.push(routeCoords[i]);
-
-  const servicesAlongRoute = [];
-
-  for (let p of sampledPoints) {
-    const lat = p.lat;
-    const lon = p.lng;
-
-    const query = `
-      [out:json];
-      (
-        node["amenity"="hospital"](around:1000,${lat},${lon});
-        node["amenity"="police"](around:1000,${lat},${lon});
-        node["amenity"="fire_station"](around:1000,${lat},${lon});
-      );
-      out;
-    `;
-
-    try {
-      const res = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query });
-      const data = await res.json();
-      data.elements.forEach(el => {
-        if (!servicesAlongRoute.some(s => s.id === el.id)) {
-          servicesAlongRoute.push({
-            id: el.id,
-            name: el.tags.name || 'Unknown',
-            type: el.tags.amenity,
-            lat: el.lat,
-            lon: el.lon,
-            address: el.tags.address || ''
-          });
-        }
-      });
-    } catch (err) {
-      console.error("Overpass error:", err);
-    }
-  }
-
-  allServices = servicesAlongRoute;
-  renderServices(allServices);
-  loadMarkers(allServices);
+  map.setView([lat, lon], 14);
+  await loadNearbyServices(lat, lon);
 }

@@ -1,61 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Safe Journey</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/live.css') }}">
+    <meta charset="UTF-8">
+    <title>Flood Areas Map</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/live.css') }}">
 </head>
 <body>
 
 <!-- Hamburger -->
-<div class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+<div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
 
 <!-- Sidebar -->
 <div id="mySidebar" class="sidebar">
-  <h2>Features</h2>
-  <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
-  <a href="{{ url_for('live') }}"><i class="fa-solid fa-triangle-exclamation"></i> Disaster Zone Detection</a>
-  <a href="{{ url_for('alternate') }}"><i class="fa-solid fa-route"></i> Alternate Route Suggestion</a>
-  <a href="{{ url_for('border_alert') }}"><i class="fa-solid fa-map"></i> National Border Alert</a>
-  <a href="{{ url_for('emergency') }}"><i class="fa-solid fa-ambulance"></i> Emergency Services Locator</a>
-  <a href="{{ url_for('safety_tips') }}"><i class="fa-solid fa-shield-halved"></i> Safety Tips & Guides</a>
-
-  <hr>
-  <h3>Emergency Numbers</h3>
-  <ul>
-    <li>🚑 Ambulance: <span class="badge green" onclick="window.location.href='tel:108'">108 / 102</span></li>
-    <li>👮 Police: <span class="badge blue" onclick="window.location.href='tel:100'">100</span></li>
-    <li>🔥 Fire: <span class="badge red" onclick="window.location.href='tel:101'">101</span></li>
-    <li>🌐 NDRF: <span class="badge yellow" onclick="window.location.href='tel:1078'">1078</span></li>
-  </ul>
-
-  <hr>
-  <h3>Quote of the Day</h3>
-  <div class="quote-card">"Preparedness today saves lives tomorrow."</div>
+    <h2>Features</h2>
+    <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+    <a href="{{ url_for('live') }}"><i class="fa-solid fa-triangle-exclamation"></i> Disaster Zone Detection</a>
+    <a href="{{ url_for('alternate') }}"><i class="fa-solid fa-route"></i> Alternate Route Suggestion</a>
+    <a href="{{ url_for('border_alert') }}"><i class="fa-solid fa-map"></i> National Border Alert</a>
+    <a href="{{ url_for('emergency') }}"><i class="fa-solid fa-ambulance"></i> Emergency Services Locator</a>
+    <a href="{{ url_for('safety_tips') }}"><i class="fa-solid fa-shield-halved"></i> Safety Tips & Guides</a>
+    <hr>
+    <h3>Emergency Numbers</h3>
+    <ul>
+        <li>🚑 Ambulance: <span class="badge green" onclick="window.location.href='tel:108'">108 / 102</span></li>
+        <li>👮 Police: <span class="badge blue" onclick="window.location.href='tel:100'">100</span></li>
+        <li>🔥 Fire: <span class="badge red" onclick="window.location.href='tel:101'">101</span></li>
+        <li>🌐 NDRF: <span class="badge yellow" onclick="window.location.href='tel:1078'">1078</span></li>
+    </ul>
 </div>
 
+<!-- Page content -->
+<div class="content-container">
+    <div class="container">
+        <h2>Search Flood Areas on Map</h2>
 
-<!-- Animated Heading -->
-<h2 class="animated-heading">🛡️ Your Safety is Our First Priority</h2>
+        <form method="POST">
+            <input type="text" name="location1" placeholder="Start location..." required>
+            <input type="text" name="location2" placeholder="End location..." required>
+            <button type="submit">Search</button>
+        </form>
 
-<!-- Controls -->
-<div class="controls">
-  <input type="text" id="source" placeholder="Enter Source">
-  <button onclick="swapLocations()"><i class="fas fa-exchange-alt"></i></button>
-  <input type="text" id="destination" placeholder="Enter Destination">
-  <button onclick="findRoute()"><i class="fas fa-search"></i></button>
-  <button id="micButton"><i class="fas fa-microphone"></i></button>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if results %}
+        <!-- MAP -->
+        <div id="map"></div>
+
+        <!-- FLOOD RESULT CARDS -->
+        <div class="results">
+            {% for r in results %}
+            <div class="flood-card">
+                <div class="flood-title">{{ r[1] }}</div>
+                <div class="severity">Severity: {{ r[4] }}</div>
+                <div class="description">{{ r[5] }}</div>
+                <div class="coords">Coordinates: {{ r[2] }}, {{ r[3] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
 </div>
 
-<!-- Map -->
-<div id="map"></div>
-
+<!-- JS Libraries -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<!-- Sidebar toggle -->
+<script>
+function toggleSidebar() {
+    document.getElementById("mySidebar").classList.toggle("active");
+}
+</script>
+
+<!-- Leaflet Map & Routing -->
+<script>
+{% if results %}
+var map = L.map('map').setView([{{ results[0][2] }}, {{ results[0][3] }}], 7);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+function getRadius(sev) {
+    if (sev === "Severe") return 16;
+    if (sev === "High") return 12;
+    if (sev === "Medium") return 8;
+    return 6;
+}
+
+/* Flood markers */
+let floodMarkers = [];
+{% for r in results %}
+var c = L.circleMarker([{{ r[2] }}, {{ r[3] }}], {
+    radius: getRadius("{{ r[4] }}"),
+    color: 'rgba(0, 123, 255, 0.8)',
+    fillColor: 'rgba(0, 123, 255, 0.4)',
+    fillOpacity: 0.4,
+    weight: 2
+}).bindPopup("<b>{{ r[1] }}</b><br>Severity: {{ r[4] }}<br>{{ r[5] }}");
+c.addTo(map);
+floodMarkers.push(c);
+{% endfor %}
+
+/* Routing */
+L.Routing.control({
+    waypoints: [
+        L.latLng({{ lat1 }}, {{ lon1 }}),
+        L.latLng({{ lat2 }}, {{ lon2 }})
+    ],
+    lineOptions: { styles: [{ color: 'red', opacity: 1, weight: 2 }] },
+    createMarker: () => null,
+    addWaypoints: false,
+    draggableWaypoints: false,
+    router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' })
+}).addTo(map);
+
+/* Fit bounds */
+var group = L.featureGroup(floodMarkers);
+map.fitBounds(group.getBounds().pad(0.5));
+{% endif %}
+</script>
+
 <script src="{{ url_for('static', filename='js/live.js') }}"></script>
 </body>
 </html>
