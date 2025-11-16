@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Confirm Delete</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="auth-card">
+    <h2>Confirm Account Deletion</h2>
+    <p style="opacity:0.8">This action is permanent. All your data will be removed.</p>
+
+    <form method="POST">
+      <input type="submit" value="Yes — Delete my account">
+    </form>
+
+    <div style="margin-top:12px;">
+      <a href="/profile" class="small-btn">Cancel</a>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
 
@@ -17,43 +17,56 @@
 </div>
 
 <div id="main">
+  <!-- Hamburger for Sidebar -->
   <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
 
-<a href="{{ url_for('signup') }}" title="Login/Signup" class="userIcon">
-  <i class="fas fa-user"></i>
-</a>
+  <!-- Sidebar -->
+  <div id="mySidebar" class="sidebar">
+    <h2>Features</h2>
+    <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+    <a href="{{ url_for('live') }}"><i class="fa-solid fa-triangle-exclamation"></i> Disaster Zone Detection</a>
+    <a href="{{ url_for('alternate') }}"><i class="fa-solid fa-route"></i> Alternate Route Suggestion</a>
+    <a href="{{ url_for('border_alert') }}"><i class="fa-solid fa-map"></i> National Border Alert</a>
+    <a href="{{ url_for('emergency') }}"><i class="fa-solid fa-ambulance"></i> Emergency Services Locator</a>
+    <a href="{{ url_for('safety_tips') }}"><i class="fa-solid fa-shield-halved"></i> Safety Tips & Guides</a>
 
-   <!-- Sidebar -->
-<div id="mySidebar" class="sidebar">
-  <h2>Features</h2>
-  <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
-  <a href="{{ url_for('live') }}"><i class="fa-solid fa-triangle-exclamation"></i> Disaster Zone Detection</a>
-  <a href="{{ url_for('alternate') }}"><i class="fa-solid fa-route"></i> Alternate Route Suggestion</a>
-  <a href="{{ url_for('border_alert') }}"><i class="fa-solid fa-map"></i> National Border Alert</a>
-  <a href="{{ url_for('emergency') }}"><i class="fa-solid fa-ambulance"></i> Emergency Services Locator</a>
-  <a href="{{ url_for('safety_tips') }}"><i class="fa-solid fa-shield-halved"></i> Safety Tips & Guides</a>
+    <hr>
+    <h3>Emergency Numbers</h3>
+    <ul>
+      <li>🚑 Ambulance: <span class="badge green" onclick="window.location.href='tel:108'">108 / 102</span></li>
+      <li>👮 Police: <span class="badge blue" onclick="window.location.href='tel:100'">100</span></li>
+      <li>🔥 Fire: <span class="badge red" onclick="window.location.href='tel:101'">101</span></li>
+      <li>🌐 NDRF: <span class="badge yellow" onclick="window.location.href='tel:1078'">1078</span></li>
+    </ul>
 
-  <hr>
-  <h3>Emergency Numbers</h3>
-  <ul>
-    <li>🚑 Ambulance: <span class="badge green" onclick="window.location.href='tel:108'">108 / 102</span></li>
-    <li>👮 Police: <span class="badge blue" onclick="window.location.href='tel:100'">100</span></li>
-    <li>🔥 Fire: <span class="badge red" onclick="window.location.href='tel:101'">101</span></li>
-    <li>🌐 NDRF: <span class="badge yellow" onclick="window.location.href='tel:1078'">1078</span></li>
-  </ul>
+    <hr>
+    <h3>Quote of the Day</h3>
+    <div class="quote-card">"Preparedness today saves lives tomorrow."</div>
+  </div>
 
-  <hr>
-  <h3>Quote of the Day</h3>
-  <div class="quote-card">"Preparedness today saves lives tomorrow."</div>
-</div>
+  <!-- Topbar -->
   <div class="topbar">
     <input id="source" placeholder="Source" class="top-input">
     <button onclick="reverseLocations()" class="top-btn">&#8646;</button>
     <input id="destination" placeholder="Destination" class="top-input">
     <button id="searchBtn" class="top-btn">&#128269;</button>
     <button id="micButton" class="top-btn">&#127908;</button>
+
+    <!-- User Profile Dropdown -->
+    {% if session.user_id %}
+    <div class="userInfo" id="userProfileDropdown">
+      <span>{{ session.user_name }}</span>
+      <i class="fas fa-caret-down" onclick="toggleProfileMenu()"></i>
+      <div id="profileMenu" style="display:none; position:absolute; top:35px; right:0; background:#222; border:1px solid #555; border-radius:8px; min-width:150px; box-shadow:0 4px 8px rgba(0,0,0,0.7);">
+        <a href="{{ url_for('view_profile') }}" style="display:block; padding:10px; color:#00ffff; text-decoration:none;">View Profile</a>
+        <a href="{{ url_for('update_profile') }}" style="display:block; padding:10px; color:#00ffff; text-decoration:none;">Update Profile</a>
+        <a href="{{ url_for('logout') }}" style="display:block; padding:10px; color:#ff4444; text-decoration:none;">Logout</a>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
+  <!-- Map -->
   <div id="map"></div>
   <div id="distanceBox">Distance: 0 km | ETA: 0 min</div>
 </div>
@@ -81,5 +94,13 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+
+<script>
+function toggleProfileMenu() {
+  const menu = document.getElementById('profileMenu');
+  menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+}
+</script>
+
 </body>
 </html>

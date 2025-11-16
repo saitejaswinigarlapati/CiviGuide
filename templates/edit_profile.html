@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Edit Profile</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="auth-card">
+    <h2>Edit Profile</h2>
+
+    {% with messages = get_flashed_messages(with_categories=false) %}
+      {% for msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data">
+      <input name="username" placeholder="Username" required type="text" value="{{ user.username }}">
+      <input name="email" placeholder="Email" required type="email" value="{{ user.email }}">
+      <input name="profile_pic" type="file" accept="image/*">
+      <hr style="opacity:0.06;margin:12px 0;">
+      <p style="font-size:13px;color:var(--muted)">To change username/email/password, enter your current password below:</p>
+      <input name="current_password" placeholder="Current password" type="password" required>
+      <input name="new_password" placeholder="New password (optional)" type="password">
+      <input type="submit" value="Save Changes">
+    </form>
+
+    <div class="link-text">
+  <a href="{{ url_for('home') }}">Back to Home</a>
+</div>
+
+
+    <div style="margin-top:16px;">
+      <button id="theme-toggle" class="small-btn">Toggle Theme</button>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

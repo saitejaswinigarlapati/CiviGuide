@@ -76,3 +76,56 @@ body, html {
 /* Floating login/signup user icon */
 .userIcon { position:fixed; top:15px; right:15px; z-index:5000; background:#00ffff; color:#111; padding:10px; border-radius:50%; font-size:22px; cursor:pointer; transition:0.3s;}
 .userIcon:hover { background:#ffeb3b; }
+
+
+.userInfo {
+    position: fixed;
+    top: 15px;
+    right: 70px;
+    z-index: 5000;
+    background: #222;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+.userInfo .logoutBtn {
+    margin-left: 10px;
+    color: #00ffff;
+    text-decoration: none;
+}
+.userInfo .logoutBtn:hover { color: #ffeb3b; }
+
+
+/* Profile Menu Links Styling */
+#profileMenu a {
+    display: block;
+    padding: 10px 15px;
+    margin: 5px 10px;
+    border-radius: 8px;
+    background: #222;        /* dark background */
+    color: #00ffff;          /* neon cyan text */
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+#profileMenu a:hover {
+    background: #00ffff;     /* neon cyan hover */
+    color: #111;             /* dark text on hover */
+    transform: scale(1.05);
+}
+
+/* Optional: small icons inside profile links */
+#profileMenu a i {
+    margin-right: 8px;
+}
+
+/* Make the dropdown more “card-like” */
+#profileMenu {
+    border: 1px solid #555;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+    border-radius: 10px;
+    min-width: 180px;
+    z-index: 5000;
+}

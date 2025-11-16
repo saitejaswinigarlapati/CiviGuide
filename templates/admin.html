@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="auth-card" style="max-width:900px;">
+    <h2>Admin — Users</h2>
+    {% with messages = get_flashed_messages(with_categories=false) %}
+      {% for msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Avatar</th><th>Username</th><th>Email</th><th>Admin</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>{{ u.id }}</td>
+            <td style="width:80px;">
+              {% if u.profile_pic %}
+                <img src="{{ url_for('uploaded_file', filename=u.profile_pic) }}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ 'Yes' if u.is_admin else 'No' }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('admin_delete_user', user_id=u.id) }}" style="display:inline">
+                <button class="small-btn confirm-delete" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+      <a href="/home" class="small-btn">Back</a>
+    </div>
+
+    <div style="margin-top:16px;">
+      <button id="theme-toggle" class="small-btn">Toggle Theme</button>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

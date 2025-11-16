@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Profile</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="auth-card">
+    <h2>Your Profile</h2>
+
+    {% if user.profile_pic %}
+      <img src="{{ url_for('uploaded_file', filename=user.profile_pic) }}" class="profile-img" alt="profile">
+    {% else %}
+      <img src="{{ url_for('static', filename='uploads/default-avatar.png') }}" class="profile-img" alt="profile" onerror="this.style.display='none'">
+    {% endif %}
+
+    <p><strong>{{ user.username }}</strong></p>
+    <p style="opacity:0.8">{{ user.email }}</p>
+
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+  <a href="{{ url_for('update_profile') }}" class="small-btn">Edit Profile</a>
+  <a href="{{ url_for('delete_account') }}" class="small-btn">Delete Account</a>
+  <a href="{{ url_for('home') }}" class="small-btn">Home</a>
+</div>
+
+
+    <div style="margin-top:16px;">
+      <button id="theme-toggle" class="small-btn">Toggle Theme</button>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
