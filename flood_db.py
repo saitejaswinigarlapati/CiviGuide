@@ -58,3 +58,10 @@ def search_flood_area(keyword):
     conn.close()
 
     return result
+
+
+# sqlite3 flood.db
+# .headers on
+# .mode column
+# .width 5 20 12 12 10 40
+# SELECT * FROM flood_zones;

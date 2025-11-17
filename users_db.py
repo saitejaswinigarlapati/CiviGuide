@@ -34,3 +34,9 @@ conn.commit()
 conn.close()
 
 print(f"Database '{DB_NAME}' created successfully with admin user '{ADMIN_DEFAULT_USER}'")
+
+
+# sqlite3 users.db
+# .headers on
+# .mode column
+# SELECT id, username, email, is_admin FROM users;

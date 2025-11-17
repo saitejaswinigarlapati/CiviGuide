@@ -7,6 +7,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from geopy.geocoders import Nominatim
 from flood_db import init_flood_db, get_all_flood_areas, search_flood_area,add_flood_area
+import users_db
+
+
 
 # ------------ Config ------------
 DB_NAME = "users.db"
@@ -63,28 +66,7 @@ def get_coordinates(location_name):
     return None, None
 
 # ---------- Initialize DB ----------
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            email TEXT UNIQUE,
-            password TEXT,
-            profile_pic TEXT,
-            is_admin INTEGER DEFAULT 0
-        )
-    """)
-    # Ensure default admin exists
-    c.execute("SELECT * FROM users WHERE username=?", (ADMIN_DEFAULT_USER,))
-    if not c.fetchone():
-        c.execute("INSERT INTO users (username, email, password, is_admin) VALUES (?, ?, ?, 1)",
-                (ADMIN_DEFAULT_USER, "admin@example.local", generate_password_hash(ADMIN_DEFAULT_PASS)))
-    conn.commit()
-    conn.close()
 
-init_db()
 
 # ---------- Routes ----------
 
