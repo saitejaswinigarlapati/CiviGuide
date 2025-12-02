@@ -33,7 +33,7 @@ if not c.fetchone():
 conn.commit()
 conn.close()
 
-print(f"Database '{DB_NAME}' created successfully with admin user '{ADMIN_DEFAULT_USER}'")
+
 
 
 # sqlite3 users.db

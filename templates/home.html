@@ -8,6 +8,13 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+  <style>
+    /* Ensure map has proper height */
+    #map {
+      width: 100%;
+      height: 500px; /* Adjust as needed */
+    }
+  </style>
 </head>
 <body>
 
@@ -58,8 +65,14 @@
       <span>{{ session.user_name }}</span>
       <i class="fas fa-caret-down" onclick="toggleProfileMenu()"></i>
       <div id="profileMenu" style="display:none; position:absolute; top:35px; right:0; background:#222; border:1px solid #555; border-radius:8px; min-width:150px; box-shadow:0 4px 8px rgba(0,0,0,0.7);">
+        
         <a href="{{ url_for('view_profile') }}" style="display:block; padding:10px; color:#00ffff; text-decoration:none;">View Profile</a>
         <a href="{{ url_for('update_profile') }}" style="display:block; padding:10px; color:#00ffff; text-decoration:none;">Update Profile</a>
+
+        {% if session.user_name == 'admin' %}
+        <a href="{{ url_for('admin_panel') }}" style="display:block; padding:10px; color:#ffd700; text-decoration:none;">🛠 Admin Panel</a>
+        {% endif %}
+
         <a href="{{ url_for('logout') }}" style="display:block; padding:10px; color:#ff4444; text-decoration:none;">Logout</a>
       </div>
     </div>
@@ -99,6 +112,13 @@
 function toggleProfileMenu() {
   const menu = document.getElementById('profileMenu');
   menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+  
+  // Fix Leaflet map resizing if dropdown opens/closes
+  if (window.map) {
+    setTimeout(() => {
+      window.map.invalidateSize();
+    }, 100);
+  }
 }
 </script>
 

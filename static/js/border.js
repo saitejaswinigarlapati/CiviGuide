@@ -17,10 +17,39 @@ var alertShown = false;
 fetch("/static/geojson/india.geojson")
   .then(res => res.json())
   .then(data => {
-      indiaLayer = L.geoJSON(data, {
-          style: { color: "red", weight: 2, fillOpacity: 0.1 }
-      }).addTo(map);
-      map.fitBounds(indiaLayer.getBounds());
+    // Add India polygon layer
+    indiaLayer = L.geoJSON(data, {
+        style: { color: "red", weight: 2, fillOpacity: 0.1 }
+    }).addTo(map);
+    map.fitBounds(indiaLayer.getBounds());
+
+    // --- Create hover-only border layer ---
+    let borderLines = [];
+
+    data.features.forEach(feature => {
+        if (feature.geometry.type === "Polygon") {
+            borderLines.push(turf.polygonToLine(feature));
+        } else if (feature.geometry.type === "MultiPolygon") {
+            feature.geometry.coordinates.forEach(coords => {
+                borderLines.push(turf.polygonToLine({ type: "Polygon", coordinates: coords }));
+            });
+        }
+    });
+
+    // Add border lines as transparent Leaflet layers for hover
+    // --- Create border lines layer with click alert ---
+borderLines.forEach(line => {
+    L.geoJSON(line, {
+        style: { color: "red", weight: 5, opacity: 0 },
+        onEachFeature: function(feature, layer) {
+            layer.on('click', function() {
+                alert("⚠️ ALERT: You clicked near India's national border!");
+            });
+        }
+    }).addTo(map);
+});
+
+
   })
   .catch(err => console.error("Error loading India GeoJSON:", err));
 
@@ -31,7 +60,7 @@ function isInsideIndia(lat, lng) {
     return turf.booleanPointInPolygon(point, indiaLayer.toGeoJSON().features[0]);
 }
 
-// --- Border alert ---
+// --- Geolocation-based border alert ---
 function checkBorder(lat, lng) {
     const inside = isInsideIndia(lat, lng);
     if (!inside && !alertShown) {
